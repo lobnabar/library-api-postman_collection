@@ -1,0 +1,731 @@
+{
+  "info": {
+    "_postman_id": "07c0d63e-32c0-4b83-909e-4a4da9e37c7e",
+    "name": "library-api-reservation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "39987662"
+  },
+  "item": [
+    {
+      "name": "happy senario",
+      "item": [
+        {
+          "name": "login with client role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});\r\n// 2. التحقق من الـ JSON Schema للـ Response\r\nvar schema = {\r\n  \"type\": \"object\",\r\n  \"properties\": {\r\n    \"token\": { \"type\": \"string\" },\r\n    \"email\": { \"type\": \"string\" },\r\n    \"fullName\": { \"type\": \"string\" },\r\n    \"role\": { \"type\": \"string\" }\r\n  },\r\n  \"required\": [\"token\", \"email\", \"fullName\", \"role\"]\r\n};\r\n\r\npm.test(\"Validate Login Response JSON Schema\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(tv4.validate(jsonData, schema)).to.be.true;\r\n});\r\npm.test(\"Response body contains 'token'\", function () {\r\n    pm.expect(pm.response.text()).to.include('token');\r\n    \r\n    var jsonData = pm.response.json();\r\npm.collectionVariables.set(\"auth_token\", jsonData.token);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"lobna@test.com\", \"password\": \"test12345\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://library-system-production-09db.up.railway.app/api/auth/login",
+              "protocol": "https",
+              "host": [
+                "library-system-production-09db",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login as admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"verify response time\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});\r\npm.test(\"verify response contain token\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData).to.have.property(\"token\");\r\n});\r\npm.test(\"verify role\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.role).to.eql(\"ADMIN\");\r\n});\r\n    \r\n\r\nvar jsonData = pm.response.json();\r\nvar adminToken = jsonData.token; // أو jsonData.access_token حسب شكل الـ Response\r\n\r\n// تخزين التوكن في الـ Collection Variable\r\npm.collectionVariables.set(\"admin_token\", adminToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@library.com\", \"password\": \"Admin@12345\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/auth/login",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add new book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\npm.test(\"verify response time\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});\r\npm.test(\"verify title of book\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.title).to.equal(\"automation\");\r\n});\r\nvar schema = {\r\n  \"type\": \"object\",\r\n  \"properties\": {\r\n    \"id\": { \"type\": \"number\" },\r\n    \"title\": { \"type\": \"string\" },\r\n    \"author\": { \"type\": \"string\" },\r\n    \"price\": { \"type\": \"number\" }\r\n  },\r\n  \"required\": [\"id\", \"title\"]\r\n};\r\n\r\npm.test(\"Simple Schema Validation\", function () {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});\r\n\r\nvar jsonData = pm.response.json();\r\n// بنخزن الـ id بتاع الكتاب\r\npm.collectionVariables.set(\"bookId\", jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}} "
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"automation\", \"author\": \"Frank Herbert\", \"publicationYear\": 2026, \"publisher\": \"Chilton Books\", \"genre\": \"technology\", \"categoryId\": 2, \"price\": 120.0, \"description\": \"fundamental of automation\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/books",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all books",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response time is less than 1000ms\", function () {\n    pm.expect(pm.response.responseTime).to.be.below(1000);\n});\n\npm.test(\"Validate Books List structure\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData).to.be.an('array');\n    if (jsonData.length > 0) {\n        pm.expect(jsonData[0]).to.have.property('id');\n        pm.expect(jsonData[0]).to.have.property('title');\n        pm.expect(jsonData[0]).to.have.property('author');\n    }\n    const schema = {\n    \"type\": \"array\",\n    \"items\": {\n        \"type\": \"object\",\n        \"required\": [\"id\", \"isbn\", \"title\", \"author\", \"publicationYear\", \"price\"],\n        \"properties\": {\n            \"id\": { \"type\": \"integer\" },\n            \"isbn\": { \"type\": \"integer\" },\n            \"title\": { \"type\": \"string\" },\n            \"author\": { \"type\": \"string\" },\n            \"publicationYear\": { \"type\": \"integer\" },\n            \"publisher\": { \"type\": [\"string\", \"null\"] },\n            \"genre\": { \"type\": [\"string\", \"null\"] },\n            \"price\": { \"type\": \"number\" },\n            \"description\": { \"type\": [\"string\", \"null\"] },\n            \"createdAt\": { \"type\": \"string\" },\n            \"updatedAt\": { \"type\": \"string\" }\n        }\n    }\n};\n\npm.test(\"Validate Schema for Books List\", function () {\n    pm.response.to.have.jsonSchema(schema);\n});\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{library_url}}/api/books",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get book by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n\r\n    pm.test(\"verify title\", function () {\r\n        var jsonData = pm.response.json();\r\n        pm.expect(jsonData.title).to.eql(\"automation\");\r\n\r\n    });\r\n    const schema = {\r\n  \r\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\r\n  \"type\": \"object\",\r\n  \"required\": [\r\n    \"id\",\r\n    \"isbn\",\r\n    \"title\",\r\n    \"author\",\r\n    \"publicationYear\",\r\n    \"publisher\",\r\n    \"genre\",\r\n    \"category\",\r\n    \"price\",\r\n    \"description\",\r\n    \"createdAt\",\r\n    \"updatedAt\"\r\n  ],\r\n  \"properties\": {\r\n    \"id\": {\r\n      \"type\": \"integer\"\r\n    },\r\n    \"isbn\": {\r\n      \"type\": \"integer\"\r\n    },\r\n    \"title\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"author\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"publicationYear\": {\r\n      \"type\": \"integer\"\r\n    },\r\n    \"publisher\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"genre\": {\r\n      \"type\": [\"string\", \"null\"]\r\n    },\r\n    \"category\": {\r\n      \"type\": \"object\",\r\n      \"required\": [\r\n        \"id\",\r\n        \"name\",\r\n        \"description\"\r\n      ],\r\n      \"properties\": {\r\n        \"id\": {\r\n          \"type\": \"integer\"\r\n        },\r\n        \"name\": {\r\n          \"type\": \"string\"\r\n        },\r\n        \"description\": {\r\n          \"type\": [\"string\", \"null\"]\r\n        }\r\n      }\r\n    },\r\n    \"price\": {\r\n      \"type\": \"number\"\r\n    },\r\n    \"description\": {\r\n      \"type\": [\"string\", \"null\"]\r\n    },\r\n    \"createdAt\": {\r\n      \"type\": \"string\"\r\n      \r\n    },\r\n    \"updatedAt\": {\r\n      \"type\": \"string\"\r\n      \r\n    }\r\n  }\r\n    };\r\n\r\npm.test(\"Validate JSON Schema\", function () {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{library_url}}/api/books/{{bookId}}",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create inventory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\npm.test(\"verify availableCopies\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.availableCopies).to.eql(0);\r\n});\r\npm.test(\"verify response time\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});\r\n// 1. قراءة الـ Response اللي راجع كـ JSON\r\nvar jsonData = pm.response.json();\r\n\r\n// 2. استخراج الـ ID بتاع الـ Inventory (تأكدي إن اسم المفتاح مطابق للشكل اللي راجع في الـ Response، مثلاً jsonData.id أو jsonData.inventoryId)\r\nvar inventoryId = jsonData.id; \r\n\r\n// 3. تخزين الـ ID في Collection Variable عشان يكون جاهز للاستخدام في ريكويستات تانية\r\npm.collectionVariables.set(\"inventoryId\", inventoryId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookId\": {{bookId}}, \"availableCopies\": 0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/inventory",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all inventory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n    const schema = {\r\n    \"type\": \"array\",\r\n    \"items\": {\r\n        \"type\": \"object\",\r\n        \"required\": [\"id\", \"book\", \"availableCopies\"],\r\n        \"properties\": {\r\n            \"id\": { \"type\": \"integer\" },\r\n            \"book\": {\r\n                \"type\": \"object\",\r\n                \"required\": [\"id\", \"isbn\", \"title\", \"author\", \"publicationYear\", \"price\"],\r\n                \"properties\": {\r\n                    \"id\": { \"type\": \"integer\" },\r\n                    \"isbn\": { \"type\": \"integer\" },\r\n                    \"title\": { \"type\": \"string\" },\r\n                    \"author\": { \"type\": \"string\" },\r\n                    \"publicationYear\": { \"type\": \"integer\" },\r\n                    \"publisher\": { \"type\": [\"string\", \"null\"] },\r\n                    \"genre\": { \"type\": [\"string\", \"null\"] },\r\n                    \"category\": {\r\n                        \"type\": [\"object\", \"null\"],\r\n                        \"properties\": {\r\n                            \"id\": { \"type\": \"integer\" },\r\n                            \"name\": { \"type\": \"string\" },\r\n                            \"description\": { \"type\": [\"string\", \"null\"] }\r\n                        }\r\n                    },\r\n                    \"price\": { \"type\": \"number\" },\r\n                    \"description\": { \"type\": [\"string\", \"null\"] },\r\n                    \"createdAt\": { \"type\": \"string\" },\r\n                    \"updatedAt\": { \"type\": \"string\" }\r\n                }\r\n            },\r\n            \"availableCopies\": { \"type\": \"integer\" },\r\n            \"createdAt\": { \"type\": \"string\" },\r\n            \"updatedAt\": { \"type\": \"string\" }\r\n        }\r\n    }\r\n};\r\n\r\npm.test(\"Validate Inventory/Available Copies JSON Schema\", function () {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{library_url}}/api/inventory",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get inventory by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"verify response time is less than\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});\r\npm.test(\"verify availableCopies\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.availableCopies).to.eql(0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{library_url}}/api/inventory/{{inventoryId}}",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "{{inventoryId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get inventory by book id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{library_url}}/inventory/book/{{bookId}}",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "inventory",
+                "book",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Response time is less than 1000ms\", function () {\n    pm.expect(pm.response.responseTime).to.be.below(1000);\n});\nconst schema = {\n    \"type\": \"object\",\n    \"required\": [\"id\", \"client\", \"book\", \"reservationDate\", \"status\", \"fulfilledDate\"],\n    \"properties\": {\n        \"id\": { \"type\": \"integer\" },\n        \"client\": {\n            \"type\": \"object\",\n            \"required\": [\"id\", \"fullName\", \"email\", \"role\", \"username\"],\n            \"properties\": {\n                \"id\": { \"type\": \"integer\" },\n                \"fullName\": { \"type\": \"string\" },\n                \"email\": { \"type\": \"string\" },\n                \"role\": { \"type\": \"string\" },\n                \"createdAt\": { \"type\": \"string\" },\n                \"updatedAt\": { \"type\": \"string\" },\n                \"username\": { \"type\": \"string\" }\n            }\n        },\n        \"book\": {\n            \"type\": \"object\",\n            \"required\": [\"id\", \"isbn\", \"title\", \"author\", \"publicationYear\", \"price\"],\n            \"properties\": {\n                \"id\": { \"type\": \"integer\" },\n                \"isbn\": { \"type\": \"integer\" },\n                \"title\": { \"type\": \"string\" },\n                \"author\": { \"type\": \"string\" },\n                \"publicationYear\": { \"type\": \"integer\" },\n                \"publisher\": { \"type\": [\"string\", \"null\"] },\n                \"genre\": { \"type\": [\"string\", \"null\"] },\n                \"category\": {\n                    \"type\": [\"object\", \"null\"],\n                    \"properties\": {\n                        \"id\": { \"type\": \"integer\" },\n                        \"name\": { \"type\": \"string\" },\n                        \"description\": { \"type\": [\"string\", \"null\"] }\n                    }\n                },\n                \"price\": { \"type\": \"number\" },\n                \"description\": { \"type\": [\"string\", \"null\"] },\n                \"createdAt\": { \"type\": \"string\" },\n                \"updatedAt\": { \"type\": \"string\" }\n            }\n        },\n        \"reservationDate\": { \"type\": \"string\" },\n        \"status\": { \"type\": \"string\" },\n        \"fulfilledDate\": { \"type\": [\"string\", \"null\"] }\n    }\n};\n\npm.test(\"Validate Reservation JSON Schema\", function () {\n    pm.response.to.have.jsonSchema(schema);\n});\n\npm.test(\"Content-Type is present\", function () {\n    pm.response.to.have.header(\"Content-Type\");\n    // 1. التأكد أن الـ Response راجع بنجاح (200 أو 201)\npm.test(\"Successful Reservation Creation\", function () {\n    pm.response.to.have.status(201); // أو 200 على حسب الـ API عندك\n});\n\n// 2. قراءة الـ Response وتحويله لجافا سكريبت أوبجكت\nvar jsonData = pm.response.json();\n\n// 3. استخراج الـ ID وتخزينه في فاريابل اسمه reservationId\nif (jsonData && jsonData.id) {\n    pm.collectionVariables.set(\"reservationId\", jsonData.id);\n    console.log(\"Saved Reservation ID: \" + jsonData.id);\n} else {\n    console.log(\"ID not found in response!\");\n}\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookId\":{{bookId}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get my reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n    const schema = {\r\n    \"type\": \"array\",\r\n    \"items\": {\r\n        \"type\": \"object\",\r\n        \"required\": [\"id\", \"client\", \"book\", \"reservationDate\", \"status\", \"fulfilledDate\"],\r\n        \"properties\": {\r\n            \"id\": { \"type\": \"integer\" },\r\n            \"client\": {\r\n                \"type\": \"object\",\r\n                \"required\": [\"id\", \"fullName\", \"email\", \"role\", \"username\"],\r\n                \"properties\": {\r\n                    \"id\": { \"type\": \"integer\" },\r\n                    \"fullName\": { \"type\": \"string\" },\r\n                    \"email\": { \"type\": \"string\" },\r\n                    \"role\": { \"type\": \"string\" },\r\n                    \"createdAt\": { \"type\": \"string\" },\r\n                    \"updatedAt\": { \"type\": \"string\" },\r\n                    \"username\": { \"type\": \"string\" }\r\n                }\r\n            },\r\n            \"book\": {\r\n                \"type\": \"object\",\r\n                \"required\": [\"id\", \"isbn\", \"title\", \"author\", \"publicationYear\", \"price\"],\r\n                \"properties\": {\r\n                    \"id\": { \"type\": \"integer\" },\r\n                    \"isbn\": { \"type\": \"integer\" },\r\n                    \"title\": { \"type\": \"string\" },\r\n                    \"author\": { \"type\": \"string\" },\r\n                    \"publicationYear\": { \"type\": \"integer\" },\r\n                    \"publisher\": { \"type\": [\"string\", \"null\"] },\r\n                    \"genre\": { \"type\": [\"string\", \"null\"] },\r\n                    \"category\": {\r\n                        \"type\": [\"object\", \"null\"],\r\n                        \"properties\": {\r\n                            \"id\": { \"type\": \"integer\" },\r\n                            \"name\": { \"type\": \"string\" },\r\n                            \"description\": { \"type\": [\"string\", \"null\"] }\r\n                        }\r\n                    },\r\n                    \"price\": { \"type\": \"number\" },\r\n                    \"description\": { \"type\": [\"string\", \"null\"] },\r\n                    \"createdAt\": { \"type\": \"string\" },\r\n                    \"updatedAt\": { \"type\": \"string\" }\r\n                }\r\n            },\r\n            \"reservationDate\": { \"type\": \"string\" },\r\n            \"status\": { \"type\": \"string\" },\r\n            \"fulfilledDate\": { \"type\": [\"string\", \"null\"] }\r\n        }\r\n    }\r\n};\r\n\r\npm.test(\"Validate Reservations List JSON Schema\", function () {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{library_url}}/api/reservations/my",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "my"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"verify response time\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reservation with book id has active reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n\r\n    pm.test(\"check message\", function () {\r\n        var jsonData = pm.response.json();\r\n        pm.expect(jsonData.message).to.contain(\"You already have an active reservation for 'automation'.\");\r\n    });\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookId\": {{bookId}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cancel reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{library_url}}/api/reservations/{{reservationId}}/cancel",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "{{reservationId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"verify status code\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\npm.test(\"verify response time\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{library_url}}/api/books/{{bookId}}",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "negative scenario",
+      "item": [
+        {
+          "name": "get all reservation by client credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create reservation of book id has inventory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookId\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reservation with book id not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {\r\n    pm.response.to.have.status(404);\r\n\r\n    pm.test(\"response message\", function () {\r\n        var jsonData = pm.response.json();\r\n        pm.expect(jsonData.message).to.contain(\"not found\");\r\n    });\r\n});\r\npm.test(\"Response time is less than 1000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(1000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookId\": 9999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{library_url}}/api/reservations",
+              "host": [
+                "{{library_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "library_url",
+      "value": ""
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "reservationId",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "bookId",
+      "value": ""
+    },
+    {
+      "key": "inventoryId",
+      "value": ""
+    }
+  ]
+}
